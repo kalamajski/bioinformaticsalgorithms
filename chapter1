@@ -1,12 +1,66 @@
-# Python Code
-# Exercise 1A page 8
-# Pattern Count - count the number of occurences of a specific pattern in a given DNA sequence
+# PYTHON EXERCISES
 
+# exercise 1A page 8
 def PatternCount(Text, Pattern):
   count = 0
   for i in range(len(Text)-len(Pattern)+1):
     if Text[i:i+len(Pattern)] == Pattern:
       count += 1
   return count
-  
+
+
+# exercise 1B page 9
+def FrequentWords(Text, k):
+  FrequentPatterns = []
+  Count = np.zeros(len(Text))
+  for i in range(len(Text)-k+1):
+    Pattern = Text[i:i+k]
+    Count[i] = PatternCount(Text,Pattern)
+  maxCount = max(Count)
+  for i in range(len(Text)-k+1):
+    if Count[i] == maxCount:
+      FrequentPatterns.append(Text[i:i+k])
+  #remove duplicates
+  FreqPatterns = []
+  [FreqPatterns.append(i) for i in FrequentPatterns if i not in FreqPatterns]
+  return FreqPatterns, int(maxCount)
+# testing: looking for most frequent k-mers in Vibrio cholerae ori
+FrequentWords('atcaatgatcaacgtaagcttctaagcatgatcaaggtgctcacacagtttatccacaacctgagtggatgacatcaagataggtcgttgtatctccttcctctcgtactctcatgaccacggaaagatgatcaagagaggatgatttcttggccatatcgcaatgaatacttgtgacttgtgcttccaattgacatcttcagcgccatattgcgctggccaaggtgacggagcgggattacgaaagcatgatcatggctgttgttctgtttatcttgttttgactgagacttgttaggatagacggtttttcatcactgactagccaaagccttactctgcctgacatcgaccgtaaattgataatgaatttacatgcttccgcgacgatttacctcttgatcatcgatccgattgaagatcttcaattgttaattctcttgcctcgactcatagccatgatgagctcttgatcatgtttccttaaccctctattttttacggaagaatgatcaagctgctgctcttgatcatcgtttc', 11)
+
+
+#exercise 1C page 12 - find reverse complement of a given DNA sequence
+def ReverseComplement(Text):
+  rev = Text[::-1]
+  revcomplement = []
+  for i in rev:
+    if i == 'A':
+      revcomplement.append('T')
+    elif i == 'C':
+      revcomplement.append('G')
+    elif i == 'T':
+      revcomplement.append('A')
+    elif i == 'G':
+      revcomplement.append('C')
+    else:
+      print('non-DNA letter found!!! Incomplete conversion...')
+      break
+  return ''.join(revcomplement)
+#testing
+ReverseComplement('ACTAGCAGTACGGTAGGCTAGC')
+
+
+# exercise 1D page 13 - find where in the genome the interesting motifs occur
+# note that the vibriogenome.txt is an external file needed to run the code
+with open('vibriogenome.txt', 'r') as vibriogenome:
+  genome = vibriogenome.read()
+  vibriogenome.close()
+
+def PatternMatch(Pattern, Genome):
+  occurences = []
+  for i,j in enumerate(Genome):
+    if Genome[i:i+len(Pattern)] == Pattern:
+      occurences.append(i)
+  return occurences
+# testing
+PatternMatch('ATGATCAAG', genome)
 
