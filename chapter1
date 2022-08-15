@@ -1,0 +1,12 @@
+# Python Code
+# Exercise 1A page 8
+# Pattern Count - count the number of occurences of a specific pattern in a given DNA sequence
+
+def PatternCount(Text, Pattern):
+  count = 0
+  for i in range(len(Text)-len(Pattern)):
+    if Text[i:i+len(Pattern)] == Pattern:
+      count += 1
+  return count
+  
+
