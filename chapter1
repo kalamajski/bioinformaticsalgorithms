@@ -1,6 +1,8 @@
-# PYTHON EXERCISES
+#coding exercises for Bioinformatics Algorithms chapter 1
 
-# exercise 1A page 8
+import numpy as np
+
+#exercise 1A page 8
 def PatternCount(Text, Pattern):
   count = 0
   for i in range(len(Text)-len(Pattern)+1):
@@ -9,7 +11,7 @@ def PatternCount(Text, Pattern):
   return count
 
 
-# exercise 1B page 9
+#exercise 1B page 9
 def FrequentWords(Text, k):
   FrequentPatterns = []
   Count = np.zeros(len(Text))
@@ -63,4 +65,125 @@ def PatternMatch(Pattern, Genome):
   return occurences
 # testing
 PatternMatch('ATGATCAAG', genome)
+
+# exercise 1E - Clump finding problem, page 15
+# there's an improved algorithm coming up later in the book, i.e. more computationally efficient
+
+import time
+vibrioori = 'atcaatgatcaacgtaagcttctaagcatgatcaaggtgctcacacagtttatccacaacctgagtggatgacatcaagataggtcgttgtatctccttcctctcgtactctcatgaccacggaaagatgatcaagagaggatgatttcttggccatatcgcaatgaatacttgtgacttgtgcttccaattgacatcttcagcgccatattgcgctggccaaggtgacggagcgggattacgaaagcatgatcatggctgttgttctgtttatcttgttttgactgagacttgttaggatagacggtttttcatcactgactagccaaagccttactctgcctgacatcgaccgtaaattgataatgaatttacatgcttccgcgacgatttacctcttgatcatcgatccgattgaagatcttcaattgttaattctcttgcctcgactcatagccatgatgagctcttgatcatgtttccttaaccctctattttttacggaagaatgatcaagctgctgctcttgatcatcgtttc'
+def ClumpFindingTool(Genome, k, L, t):
+  for i in range(len(Genome)-L+1):
+    Text = Genome[i:i+L]
+    result = FrequentWords(Text, k)
+    if result[1] >= t:
+      print(f'The k-mer(s) {result[0]} occur {result[1]} time(s) at position {i}-{i+L}')
+# testing - takes loads of time to run through an entire genome, so here we just test the ori part of V. cholerae!!!
+startTime = time.time()
+ClumpFindingTool(vibrioori, 7, 500, 3)
+print("\n The algorithm took", time.time()-startTime, "sec to run")
+
+# exercise 1F - page 27
+# Minimum Skew Problem
+
+with open('vibriogenome.txt', 'r') as vibriogenome:
+  genome = vibriogenome.read()
+  vibriogenome.close()
+
+def FindMinimumSkew(Genome):
+  skew = np.zeros(len(Genome))
+  for i,j in enumerate(Genome):
+    if j == 'G' or j == 'g':
+      skew[i] = skew[i-1]+1
+    elif j == 'C' or j == 'c':
+      skew[i] = skew[i-1]-1
+    else:
+      skew[i] = skew[i-1]
+  return skew
+
+results = FindMinimumSkew(genome)
+minvalue = np.argmin(results)
+print(f'the minimum skew value is at position {minvalue} in the genome')
+#generate a plot of the 10000 bp window around the minvalue
+xvals = np.arange(minvalue-5000,minvalue+5000, step=1)
+plt.plot(xvals,results[xvals],'.b')
+plt.show()
+
+# exercise 1G - page 29
+# Hamming distance - find the number of mismatches between two DNA strings
+
+def HammingDistance(string1, string2):
+  if len(string1) != len(string2):
+    print("The two DNA strings need to be of equal length!")
+    return
+  hamming = 0
+  for i in range(len(string1)):
+    if string1[i] != string2[i]:
+      hamming += 1
+  return hamming
+# testing
+string1 = 'TTCGATCG'
+string2 = 'ATCGATGC'
+h = HammingDistance(string1, string2)
+print('the number of mismatches:', h)
+
+
+# exercise 1H - page 29
+# approximate pattern matching problem
+
+def ApproximateMatch(Pattern, Text, d):
+  ind = []
+  for i in range(len(Text)-len(Pattern)):
+    string1 = Text[i:i+len(Pattern)]
+    string2 = Pattern
+    hamming = HammingDistance(string1, string2)
+    if hamming <= d:
+      ind.append(i)
+  return ind
+#testing 
+ApproximateMatch('ATCGATCG', genome[:100000], 1)  #seems to work!
+
+
+# exercise 1I - page 30
+# frequent words with mismatches
+
+from itertools import product
+def FrequentWordsWithMismatches(Text, k, d):
+  #genereate a list of all permutations of kmers 4^k
+  dna = ['A','T','C','G']
+  allkmers = [''.join(comb) for comb in product(dna, repeat=k)]
+  print(f'we have {len(allkmers)} k-mers to look for!')
+  count = np.zeros(len(allkmers))
+  for i,kmer in enumerate(allkmers):
+    count[i] = len(ApproximateMatch(kmer, Text, d)) 
+  return allkmers[np.argmax(count)], int(np.max(count))
+# test searching for 5-mers with 1 mismatch in the first 10000 bp of the Vibrio genome
+print('The most frequent 5-mer, with 1 allowed mismatch, and its frequency is', FrequentWordsWithMismatches(genome[:10000],5,1))
+
+
+# exercise 1J - page 31
+# frequent words with mismatches and reverse complements
+from itertools import product
+vibrioori = vibrioori.upper()
+def FrequentWordsWithMismatchesAndReverseComplements(Text, k, d):
+  #genereate a list of all permutations of kmers 4^k
+  dna = ['A','T','C','G']
+  allkmers = [''.join(comb) for comb in product(dna, repeat=k)]
+  print(f'we have {len(allkmers)} k-mers and their reverse complements to look for!')
+  count = np.zeros(len(allkmers))
+  for i,kmer in enumerate(allkmers):
+    revckmer = ReverseComplement(kmer)
+    count[i] = len(ApproximateMatch(kmer, Text, d)) + len(ApproximateMatch(revckmer, Text, d))
+  maxcounts = np.argwhere(count == np.amax(count))
+  maxkmers = [allkmers[int(i)] for i in maxcounts]
+  return maxkmers, int(np.amax(count))
+# test searching for 9-mers with 2 mismatches in the ori region of the Vibrio genome
+print('The most frequent 9-mers, with allowed mismatches and reverse complement, and its frequency is', FrequentWordsWithMismatchesAndReverseComplements(vibrioori,9,2))
+# this algorithm takes forever....improved algorithms later in the chapter!
+
+
+
+
+
+
+
 
